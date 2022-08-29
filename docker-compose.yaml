@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  app:
+    image: poc
+    container_name: landid-poc
+    ports:
+      - 80:3333
+    networks:
+      - elk
+
+  elastic:
+    image: elasticsearch:8.4.0
+    container_name: elastic
+    volumes: 
+      - ./es_data/:/usr/share/elasticsearch/data/
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      discovery.type: single-node
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.4.0
+    container_name: logstash
+    depends_on:
+      - app
+    # volumes:
+    #   - ./pipeline/:/usr/share/logstash/pipeline/
+    #   - ./pm2.conf/:/etc/logstash/conf/pm2.conf
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    ports:
+      - 9600:9600
+    networks:
+      - elk
+
+networks:
+  elk:
+    driver: bridge
